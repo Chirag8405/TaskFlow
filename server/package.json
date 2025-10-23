@@ -1,0 +1,56 @@
+{
+  "name": "realtime-task-manager-server",
+  "version": "1.0.0",
+  "description": "Backend API server for Real-Time Collaborative Task Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "./start-dev.sh",
+    "dev:simple": "pkill -f 'node.*server' || true && nodemon server.js",
+    "dev:clean": "fuser -k 5000/tcp || true && nodemon server.js",
+    "admin:promote": "node scripts/promoteToAdmin.js",
+    "admin:list": "node scripts/listUsers.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mongodb",
+    "socket.io",
+    "jwt",
+    "real-time",
+    "task-management"
+  ],
+  "author": "Chirag",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "colors": "^1.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-async-handler": "^1.2.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.1.0",
+    "express-validator": "^7.3.0",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.2",
+    "morgan": "^1.10.1",
+    "node-cache": "^5.1.2",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.10",
+    "redis": "^5.8.3",
+    "socket.io": "^4.8.1",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.10"
+  }
+}
