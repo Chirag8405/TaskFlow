@@ -38,7 +38,8 @@ const Analytics = () => {
 
       // Process data for charts - handle different response structures
       const tasks = Array.isArray(tasksRes.data.data) ? tasksRes.data.data : (Array.isArray(tasksRes.data) ? tasksRes.data : []);
-      const projects = Array.isArray(projectsRes.data.data) ? projectsRes.data.data : (Array.isArray(projectsRes.data) ? projectsRes.data : []);
+      const projectsData = projectsRes.data.data || projectsRes.data || {};
+      const projects = Array.isArray(projectsData.projects) ? projectsData.projects : (Array.isArray(projectsData) ? projectsData : []);
       const activities = Array.isArray(activitiesRes.data.data) ? activitiesRes.data.data : (Array.isArray(activitiesRes.data) ? activitiesRes.data : []);
 
       // Task status distribution
