@@ -22,7 +22,7 @@ import TaskModal from '../tasks/TaskModal';
 import ProjectModal from '../projects/ProjectModal';
 import { projectService } from '../../services/projectService';
 
-const Navbar = ({ onSidebarToggle, sidebarOpen }) => {
+const Navbar = ({ onSidebarToggle, sidebarOpen, showProjectModal: externalShowProjectModal, setShowProjectModal: externalSetShowProjectModal }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,7 +30,11 @@ const Navbar = ({ onSidebarToggle, sidebarOpen }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [internalShowProjectModal, setInternalShowProjectModal] = useState(false);
+
+  // Use external state if provided, otherwise use internal state
+  const showProjectModal = externalShowProjectModal !== undefined ? externalShowProjectModal : internalShowProjectModal;
+  const setShowProjectModal = externalSetShowProjectModal || setInternalShowProjectModal;
 
   const { user, logout } = useAuth();
   const { notifications, getUnreadCount } = useNotifications();

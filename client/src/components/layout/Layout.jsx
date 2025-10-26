@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
@@ -13,12 +14,18 @@ const Layout = ({ children }) => {
     setSidebarOpen(false);
   };
 
+  const handleOpenProjectModal = () => {
+    setShowProjectModal(true);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       {/* Navbar */}
       <Navbar 
         onSidebarToggle={handleSidebarToggle} 
         sidebarOpen={sidebarOpen}
+        showProjectModal={showProjectModal}
+        setShowProjectModal={setShowProjectModal}
       />
       
       <div className="flex flex-1 overflow-hidden">
@@ -26,6 +33,7 @@ const Layout = ({ children }) => {
         <Sidebar 
           isOpen={sidebarOpen} 
           onClose={handleSidebarClose}
+          onOpenProjectModal={handleOpenProjectModal}
         />
         
         {/* Main content */}

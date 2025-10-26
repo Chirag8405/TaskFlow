@@ -20,7 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, onOpenProjectModal }) => {
   const [projects, setProjects] = useState([]);
   const [projectsExpanded, setProjectsExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -194,13 +194,17 @@ const Sidebar = ({ isOpen, onClose }) => {
                   )}
                   Projects
                 </button>
-                <Link
-                  to="/projects/new"
+                <button
+                  onClick={() => {
+                    if (onOpenProjectModal) {
+                      onOpenProjectModal();
+                    }
+                  }}
                   className="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   title="Create new project"
                 >
                   <Plus className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
 
               {projectsExpanded && (

@@ -73,30 +73,6 @@ const ActivityFeed = ({ activities = [], loading = false, className = '' }) => {
     }
   };
 
-  const getAvatarColor = (name) => {
-    if (!name) return '#6366f1';
-    const colors = [
-      '#ef4444', '#f97316', '#f59e0b', '#eab308',
-      '#84cc16', '#22c55e', '#10b981', '#14b8a6',
-      '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
-      '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'
-    ];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-  };
-
-  const getInitials = (name) => {
-    if (!name) return '?';
-    const words = name.trim().split(' ');
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return name[0].toUpperCase();
-  };
-
   if (loading) {
     return (
       <div className={`bg-white rounded-lg shadow border border-gray-200 ${className}`}>
