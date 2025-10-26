@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: taskflow-backend
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 5000
+      - key: CLIENT_URL
+        sync: false

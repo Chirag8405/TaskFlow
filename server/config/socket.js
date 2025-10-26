@@ -2,12 +2,19 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const setupSocket = (server) => {
+  // Get allowed origins from environment
+  const allowedOrigins = process.env.CLIENT_URL 
+    ? process.env.CLIENT_URL.split(',')
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
   const io = require('socket.io')(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
-      credentials: true
-    }
+      credentials: true,
+      allowedHeaders: ["Authorization"]
+    },
+    transports: ['websocket', 'polling']
   });
 
   // Socket authentication middleware
