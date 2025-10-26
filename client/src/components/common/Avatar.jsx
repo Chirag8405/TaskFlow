@@ -44,22 +44,31 @@ const Avatar = ({ user, size = 'md', className = '', showOnlineStatus = false })
 
   const initials = user.initials || getInitials(user.name || user.email);
   const bgColor = getColorFromName(user.name || user.email);
+  
+  // Check if avatar exists and is a valid URL/path (not empty string)
+  const hasValidAvatar = user.avatar && user.avatar.trim().length > 0;
 
   return (
     <div className={`relative inline-block ${className}`}>
-      {user.avatar ? (
+      {hasValidAvatar ? (
         <img
           src={user.avatar}
           alt={user.name || 'User'}
           className={`${sizeClasses[size]} rounded-full object-cover`}
+          onError={(e) => {
+            // If image fails to load, hide it and show initials instead
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
         />
-      ) : (
-        <div
-          className={`${sizeClasses[size]} ${bgColor} rounded-full flex items-center justify-center text-white font-semibold`}
-        >
-          {initials}
-        </div>
-      )}
+      ) : null}
+      
+      <div
+        className={`${sizeClasses[size]} ${bgColor} rounded-full flex items-center justify-center text-white font-semibold ${hasValidAvatar ? 'hidden' : ''}`}
+        style={hasValidAvatar ? { display: 'none' } : {}}
+      >
+        {initials}
+      </div>
       
       {showOnlineStatus && user.isOnline && (
         <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 ring-2 ring-white"></span>

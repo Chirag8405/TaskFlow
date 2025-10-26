@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { projectService } from '../../services/projectService';
+import { taskService } from '../../services/taskService';
 import {
   Home,
   FolderOpen,
@@ -23,12 +24,29 @@ const Sidebar = ({ isOpen, onClose }) => {
   const [projects, setProjects] = useState([]);
   const [projectsExpanded, setProjectsExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [taskCount, setTaskCount] = useState(0);
   const { user } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
     fetchProjects();
+    fetchTaskCount();
   }, []);
+
+  const fetchTaskCount = async () => {
+    try {
+      const response = await taskService.getRecentTasks(1000);
+      const tasks = response.data || [];
+      // Count only incomplete tasks (todo, in-progress, review)
+      const incompleteTasks = tasks.filter(task => 
+        task.status !== 'completed'
+      );
+      setTaskCount(incompleteTasks.length);
+    } catch (error) {
+      console.error('Error fetching task count:', error);
+      setTaskCount(0);
+    }
+  };
 
   const fetchProjects = async () => {
     try {
@@ -55,7 +73,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       href: '/tasks',
       icon: CheckCircle,
       current: location.pathname === '/tasks',
-      badge: '12', // This would come from actual task count
+      badge: taskCount > 0 ? taskCount.toString() : null, // Dynamic task count
     },
     {
       name: 'Calendar',

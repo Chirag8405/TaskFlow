@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -15,6 +15,7 @@ import {
   Plus,
   FolderPlus,
   ListTodo,
+  CheckCircle,
 } from 'lucide-react';
 import Modal from '../common/Modal';
 import TaskModal from '../tasks/TaskModal';
@@ -25,6 +26,8 @@ const Navbar = ({ onSidebarToggle, sidebarOpen }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -33,8 +36,61 @@ const Navbar = ({ onSidebarToggle, sidebarOpen }) => {
   const { notifications, getUnreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchTimeoutRef = useRef(null);
   
   const unreadCount = getUnreadCount();
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        handleSearch(searchQuery);
+      }, 300);
+    } else {
+      setSearchResults(null);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const { taskService } = await import('../../services/taskService');
+      const { projectService } = await import('../../services/projectService');
+      const { userService } = await import('../../services/userService');
+
+      const [tasksRes, projectsRes, usersRes] = await Promise.allSettled([
+        taskService.getRecentTasks(10, query),
+        projectService.getProjects({ search: query, limit: 5 }),
+        userService.getUsers({ search: query, limit: 5 }),
+      ]);
+
+      setSearchResults({
+        tasks: tasksRes.status === 'fulfilled' ? (tasksRes.value.data || []).slice(0, 5) : [],
+        projects: projectsRes.status === 'fulfilled' ? (projectsRes.value.data.projects || []).slice(0, 5) : [],
+        users: usersRes.status === 'fulfilled' ? (usersRes.value.data.users || []).slice(0, 5) : [],
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults({ tasks: [], projects: [], users: [] });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -90,10 +146,115 @@ const Navbar = ({ onSidebarToggle, sidebarOpen }) => {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  navigate(`/tasks?search=${encodeURIComponent(searchQuery)}`);
+                  setSearchResults(null);
+                  setSearchQuery('');
+                }
+                if (e.key === 'Escape') {
+                  setSearchResults(null);
+                  setSearchQuery('');
+                }
+              }}
               className="input pl-10 w-full"
               placeholder="Search tasks, projects, or team members..."
             />
+            
+            {/* Search Results Dropdown */}
+            {searchResults && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                {searchLoading ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Tasks */}
+                    {searchResults.tasks?.length > 0 && (
+                      <div className="p-2">
+                        <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Tasks</div>
+                        {searchResults.tasks.map((task) => (
+                          <button
+                            key={task._id}
+                            onClick={() => {
+                              navigate(`/tasks?search=${encodeURIComponent(task.title)}`);
+                              setSearchResults(null);
+                              setSearchQuery('');
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-md flex items-start"
+                          >
+                            <CheckCircle className="h-4 w-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
+                              <p className="text-xs text-gray-500 truncate">{task.project?.title || 'No project'}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Projects */}
+                    {searchResults.projects?.length > 0 && (
+                      <div className="p-2 border-t border-gray-100">
+                        <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Projects</div>
+                        {searchResults.projects.map((project) => (
+                          <button
+                            key={project._id}
+                            onClick={() => {
+                              navigate(`/projects/${project._id}`);
+                              setSearchResults(null);
+                              setSearchQuery('');
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-md flex items-start"
+                          >
+                            <FolderPlus className="h-4 w-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{project.title}</p>
+                              <p className="text-xs text-gray-500 truncate">{project.description || 'No description'}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Team Members */}
+                    {searchResults.users?.length > 0 && (
+                      <div className="p-2 border-t border-gray-100">
+                        <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Team Members</div>
+                        {searchResults.users.map((member) => (
+                          <button
+                            key={member._id}
+                            onClick={() => {
+                              navigate(`/team`);
+                              setSearchResults(null);
+                              setSearchQuery('');
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-md flex items-center"
+                          >
+                            <Avatar user={member} size="xs" showOnlineStatus={false} />
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{member.name}</p>
+                              <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* No Results */}
+                    {!searchResults.tasks?.length && !searchResults.projects?.length && !searchResults.users?.length && (
+                      <div className="p-4 text-center text-gray-500">
+                        <p className="text-sm">No results found</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

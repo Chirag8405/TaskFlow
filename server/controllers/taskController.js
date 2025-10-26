@@ -703,7 +703,7 @@ const getTaskStats = async (req, res) => {
 // @access  Private
 const getRecentTasks = async (req, res) => {
   try {
-    const { limit = 5 } = req.query;
+    const { limit = 5, search } = req.query;
 
     // Get projects user has access to
     const userProjects = await Project.find({
@@ -722,10 +722,21 @@ const getRecentTasks = async (req, res) => {
 
     const projectIds = userProjects.map(p => p._id);
 
-    // Get recent tasks from user's projects
-    const recentTasks = await Task.find({
+    // Build query
+    const query = {
       project: { $in: projectIds }
-    })
+    };
+
+    // Add search filter if provided
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Get recent tasks from user's projects
+    const recentTasks = await Task.find(query)
       .populate('project', 'title color')
       .populate('assignedTo', 'name email avatar')
       .populate('createdBy', 'name email avatar')

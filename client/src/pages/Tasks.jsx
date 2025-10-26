@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { taskService } from '../services/taskService';
 import { projectService } from '../services/projectService';
 import Layout from '../components/layout/Layout';
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 
 const Tasks = () => {
+  const [searchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
@@ -33,6 +34,14 @@ const Tasks = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const menuRef = useRef(null);
+
+  // Set search query from URL parameter
+  useEffect(() => {
+    const urlSearch = searchParams.get('search');
+    if (urlSearch) {
+      setSearchQuery(urlSearch);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchData();
@@ -342,7 +351,7 @@ const Tasks = () => {
 
         {/* Tasks List - Scrollable */}
         <div className="flex-1 overflow-auto p-8 lg:p-12">
-            <div className="bg-white rounded-lg shadow border border-gray-200">
+            <div className="bg-white rounded-lg shadow border border-gray-200 overflow-visible">
             {filteredTasks.length === 0 ? (
               <div className="text-center py-12">
                 <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -357,7 +366,7 @@ const Tasks = () => {
             ) : (
               <>
                 {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto overflow-y-visible">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -455,34 +464,45 @@ const Tasks = () => {
                                 setOpenMenuId(openMenuId === task._id ? null : task._id);
                               }}
                               className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                              id={`menu-button-${task._id}`}
                             >
                               <MoreVertical className="h-4 w-4" />
                             </button>
                             
-                            {openMenuId === task._id && (
-                              <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditTask(task._id);
+                            {openMenuId === task._id && (() => {
+                              const button = document.getElementById(`menu-button-${task._id}`);
+                              const rect = button?.getBoundingClientRect();
+                              return (
+                                <div 
+                                  className="fixed w-32 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-[9999]"
+                                  style={{
+                                    top: rect ? `${rect.top - 80}px` : '0px',
+                                    left: rect ? `${rect.left - 100}px` : '0px',
                                   }}
-                                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 >
-                                  <Edit className="h-3 w-3 mr-2" />
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteTask(task._id);
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                >
-                                  <Trash2 className="h-3 w-3 mr-2" />
-                                  Delete
-                                </button>
-                              </div>
-                            )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditTask(task._id);
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                  >
+                                    <Edit className="h-3 w-3 mr-2" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteTask(task._id);
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-2" />
+                                    Delete
+                                  </button>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </td>
                       </tr>

@@ -53,11 +53,11 @@ export const taskService = {
     return response.data;
   },
 
-  // Get recent tasks for dashboard
-  getRecentTasks: async (limit = 5) => {
-    const response = await api.get('/tasks/recent', { 
-      params: { limit } 
-    });
+    // Get recent tasks for dashboard
+  getRecentTasks: async (limit = 5, search = null) => {
+    const params = { limit };
+    if (search) params.search = search;
+    const response = await api.get('/tasks/recent', { params });
     return response.data;
   },
 };
