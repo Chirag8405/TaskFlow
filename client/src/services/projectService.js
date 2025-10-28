@@ -16,14 +16,24 @@ export const projectService = {
 
   // Create new project
   createProject: async (projectData) => {
-    const response = await api.post('/projects', projectData);
-    return response.data;
+    try {
+      const response = await api.post('/projects', projectData);
+      return response.data;
+    } catch (error) {
+      console.error('Create project error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   // Update project
   updateProject: async (projectId, projectData) => {
-    const response = await api.put(`/projects/${projectId}`, projectData);
-    return response.data;
+    try {
+      const response = await api.put(`/projects/${projectId}`, projectData);
+      return response.data;
+    } catch (error) {
+      console.error('Update project error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   // Delete project

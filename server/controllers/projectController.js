@@ -160,7 +160,7 @@ const getProject = async (req, res) => {
 // @access  Private
 const createProject = async (req, res) => {
   try {
-    const { title, description, color, members } = req.body;
+    const { title, description, color, members, status, priority, startDate, endDate } = req.body;
 
     // Validate members if provided
     let memberIds = [req.user._id]; // Always include owner as a member
@@ -185,6 +185,10 @@ const createProject = async (req, res) => {
       title,
       description,
       color,
+      status,
+      priority,
+      startDate: startDate || null,
+      endDate: endDate || null,
       owner: req.user._id,
       members: memberIds
     });
@@ -234,7 +238,7 @@ const createProject = async (req, res) => {
 // @access  Private
 const updateProject = async (req, res) => {
   try {
-    const { title, description, color, status } = req.body;
+    const { title, description, color, status, priority, startDate, endDate } = req.body;
 
     const project = await Project.findById(req.params.id);
 
@@ -258,6 +262,9 @@ const updateProject = async (req, res) => {
     if (description !== undefined) project.description = description;
     if (color) project.color = color;
     if (status) project.status = status;
+    if (priority) project.priority = priority;
+    if (startDate !== undefined) project.startDate = startDate || null;
+    if (endDate !== undefined) project.endDate = endDate || null;
 
     const updatedProject = await project.save();
     

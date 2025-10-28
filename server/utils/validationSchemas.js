@@ -95,15 +95,19 @@ const projectSchemas = {
     color: Joi.string()
       .allow(''),
     status: Joi.string()
-      .valid('active', 'completed', 'on-hold')
-      .default('active'),
+      .valid('planning', 'active', 'on-hold', 'completed', 'archived')
+      .default('planning'),
     priority: Joi.string()
       .valid('low', 'medium', 'high')
       .default('medium'),
     startDate: Joi.date()
-      .min('now'),
+      .allow('', null),
     endDate: Joi.date()
-      .greater(Joi.ref('startDate')),
+      .allow('', null)
+      .when('startDate', {
+        is: Joi.date().required(),
+        then: Joi.date().greater(Joi.ref('startDate'))
+      }),
     members: Joi.array()
       .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
       .max(50),
@@ -120,11 +124,17 @@ const projectSchemas = {
     color: Joi.string()
       .allow(''),
     status: Joi.string()
-      .valid('active', 'completed', 'on-hold'),
+      .valid('planning', 'active', 'on-hold', 'completed', 'archived'),
     priority: Joi.string()
       .valid('low', 'medium', 'high'),
-    startDate: Joi.date(),
-    endDate: Joi.date(),
+    startDate: Joi.date()
+      .allow('', null),
+    endDate: Joi.date()
+      .allow('', null)
+      .when('startDate', {
+        is: Joi.date().required(),
+        then: Joi.date().greater(Joi.ref('startDate'))
+      }),
     members: Joi.array()
       .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
       .max(50),
