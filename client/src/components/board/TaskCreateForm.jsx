@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Textarea, Select } from '../common';
+import { useToast } from '../../hooks/useToast';
 import { Calendar, Flag, User } from 'lucide-react';
 
 const TaskCreateForm = ({ onSubmit, onCancel }) => {
@@ -11,6 +12,7 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
     assignee: ''
   });
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const priorityOptions = [
     { value: 'low', label: 'Low Priority', color: 'text-green-600' },
@@ -31,10 +33,12 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
         ...formData,
         title: formData.title.trim(),
         description: formData.description.trim(),
-        dueDate: formData.dueDate || null
+        dueDate: formData.dueDate || null,
+        assignee: formData.assignee || null
       };
 
       await onSubmit(taskData);
+      toast.success('Task created successfully');
       
       // Reset form
       setFormData({
@@ -45,7 +49,8 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
         assignee: ''
       });
     } catch (error) {
-      console.error('Error creating task:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create task';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

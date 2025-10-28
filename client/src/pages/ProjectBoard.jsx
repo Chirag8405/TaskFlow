@@ -4,6 +4,7 @@ import { projectService } from '../services/projectService';
 import Layout from '../components/layout/Layout';
 import { KanbanBoard } from '../components/board';
 import { LoadingSpinner, Button } from '../components/common';
+import { useToast } from '../hooks/useToast';
 import {
   ArrowLeft,
   Settings,
@@ -20,6 +21,7 @@ const ProjectBoard = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -32,14 +34,15 @@ const ProjectBoard = () => {
       const projectResponse = await projectService.getProject(projectId);
       setProject(projectResponse.data);
     } catch (error) {
-      console.error('Error fetching project:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to fetch project details';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleTaskUpdate = (task) => {
-    console.log('Task updated:', task);
+    toast.success('Task updated successfully');
   };
 
   const getStatusColor = (status) => {

@@ -109,12 +109,10 @@ class NotificationService {
   subscribeToNotifications(callback) {
     // This would be used with Socket.io context
     // The actual implementation is in the NotificationPanel component
-    console.log('Subscribe to notifications:', callback);
   }
 
   unsubscribeFromNotifications(callback) {
     // This would be used with Socket.io context
-    console.log('Unsubscribe from notifications:', callback);
   }
 }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { taskService } from '../../services/taskService';
 import { userService } from '../../services/userService';
 import { projectService } from '../../services/projectService';
+import { useToast } from '../../hooks/useToast';
 import { X, Calendar, User, Flag, FileText, FolderOpen } from 'lucide-react';
 
 const TaskModal = ({ isOpen, onClose, task, projectId, onSave }) => {
@@ -18,6 +19,7 @@ const TaskModal = ({ isOpen, onClose, task, projectId, onSave }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +58,7 @@ const TaskModal = ({ isOpen, onClose, task, projectId, onSave }) => {
       setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
       setUsers([]);
     }
   };
@@ -67,7 +70,7 @@ const TaskModal = ({ isOpen, onClose, task, projectId, onSave }) => {
       const projectsData = response.data?.projects || response.projects || response.data || [];
       setProjects(Array.isArray(projectsData) ? projectsData : []);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      toast.error('Failed to load projects');
       setProjects([]);
     }
   };
@@ -129,18 +132,19 @@ const TaskModal = ({ isOpen, onClose, task, projectId, onSave }) => {
       let response;
       if (task) {
         response = await taskService.updateTask(task._id, submitData);
+        toast.success('Task updated successfully');
       } else {
         response = await taskService.createTask(submitData);
+        toast.success('Task created successfully');
       }
 
       onSave(response.data);
       onClose();
     } catch (error) {
-      console.error('Error saving task:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Submitted data:', submitData);
+      const errorMessage = error.response?.data?.message || 'Failed to save task';
+      toast.error(errorMessage);
       setErrors({
-        submit: error.response?.data?.message || 'Failed to save task'
+        submit: errorMessage
       });
     } finally {
       setLoading(false);
