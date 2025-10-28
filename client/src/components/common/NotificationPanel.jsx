@@ -31,13 +31,13 @@ const NotificationItem = ({ notification, onRemove, onMarkAsRead }) => {
       onClick={() => !notification.read && onMarkAsRead(notification.id)}
     >
       <div className="flex items-start justify-between">
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start space-x-3 min-w-0 flex-1">
           <NotificationIcon type={notification.type} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-gray-900 break-words">
               {notification.title}
             </p>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 mt-1 break-words">
               {notification.message}
             </p>
             <p className="text-xs text-gray-500 mt-1">
@@ -50,7 +50,7 @@ const NotificationItem = ({ notification, onRemove, onMarkAsRead }) => {
             e.stopPropagation();
             onRemove(notification.id);
           }}
-          className="ml-3 text-gray-400 hover:text-gray-600 transition-colors"
+          className="ml-3 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
         >
           <X className="h-4 w-4" />
         </button>
@@ -98,14 +98,14 @@ const NotificationPanel = ({ isOpen, onToggle }) => {
         )}
       </button>
 
-      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+      <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] sm:max-w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
             {notifications.length > 0 && (
               <button
                 onClick={clearAllNotifications}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap"
               >
                 Clear all
               </button>

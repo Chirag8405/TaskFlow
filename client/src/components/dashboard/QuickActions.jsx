@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../common';
+import { useToast } from '../../hooks/useToast';
 import { 
   Plus, 
   Calendar, 
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 
 const QuickActions = ({ onAction, className = '' }) => {
+  const { toast } = useToast();
   const actions = [
     {
       id: 'create-task',
@@ -75,19 +77,19 @@ const QuickActions = ({ onAction, className = '' }) => {
       switch (actionId) {
         case 'create-task':
           // Navigate to task creation or open modal
-          console.log('Create task clicked');
+          toast.info('Task creation feature coming soon');
           break;
         case 'create-project':
           // Navigate to project creation
-          console.log('Create project clicked');
+          toast.info('Project creation feature coming soon');
           break;
-        case 'schedule-meeting':
+        case 'schedule-meeting':  
           // Open calendar scheduling
-          console.log('Schedule meeting clicked');
+          toast.info('Meeting scheduling feature coming soon');
           break;
         case 'invite-member':
           // Open invite modal
-          console.log('Invite member clicked');
+          toast.info('Member invitation feature coming soon');
           break;
         case 'view-calendar':
           // Navigate to calendar
@@ -98,7 +100,7 @@ const QuickActions = ({ onAction, className = '' }) => {
           window.location.href = '/tasks';
           break;
         default:
-          console.log('Unknown action:', actionId);
+          toast.warning('Unknown action requested');
       }
     }
   };
