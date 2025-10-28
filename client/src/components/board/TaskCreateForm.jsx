@@ -81,102 +81,119 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-      <div className="space-y-4">
-        {/* Title */}
-        <Input
-          placeholder="Task title..."
-          value={formData.title}
-          onChange={(e) => handleChange('title', e.target.value)}
-          autoFocus
-          required
-          className="border-0 shadow-none p-0 text-sm font-medium placeholder-gray-400 focus:ring-0"
-        />
-
-        {/* Description */}
-        <Textarea
-          placeholder="Add a description..."
-          value={formData.description}
-          onChange={(e) => handleChange('description', e.target.value)}
-          rows={2}
-          className="border-0 shadow-none p-0 text-sm placeholder-gray-400 focus:ring-0 resize-none"
-        />
-
-        {/* Metadata Row */}
-        <div className="flex items-center space-x-3 pt-2 border-t border-gray-100">
-          {/* Priority */}
-          <div className="flex items-center space-x-2">
-            <Flag className="h-4 w-4 text-gray-400" />
-            <Select
-              value={formData.priority}
-              onChange={(e) => handleChange('priority', e.target.value)}
-              className="border-0 shadow-none p-0 text-xs focus:ring-0"
-            >
-              {priorityOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          {/* Due Date */}
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <input
-              type="date"
-              value={formData.dueDate}
-              onChange={(e) => handleChange('dueDate', e.target.value)}
-              className="border-0 shadow-none p-0 text-xs focus:ring-0 text-gray-600"
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <form onSubmit={handleSubmit} className="p-4">
+        <div className="space-y-4">
+          {/* Title */}
+          <div>
+            <Input
+              placeholder="Task title..."
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              autoFocus
+              required
+              className="w-full border-0 shadow-none p-0 text-base font-medium placeholder-gray-400 focus:ring-0 bg-transparent"
             />
           </div>
 
-          {/* Assignee */}
-          <div className="flex items-center space-x-2">
-            <User className="h-4 w-4 text-gray-400" />
-            <Select
-              value={formData.assignedTo}
-              onChange={(e) => handleChange('assignedTo', e.target.value)}
-              className="border-0 shadow-none p-0 text-xs focus:ring-0"
-            >
-              <option value="">Unassigned</option>
-              {users.map(user => (
-                <option key={user._id} value={user._id}>
-                  {user.name || user.email}
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center space-x-2">
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!formData.title.trim() || loading}
-              className="h-8"
-            >
-              {loading ? 'Creating...' : 'Add Task'}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              className="h-8"
-            >
-              Cancel
-            </Button>
+          {/* Description */}
+          <div>
+            <Textarea
+              placeholder="Add a description..."
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="w-full border-0 shadow-none p-0 text-sm placeholder-gray-400 focus:ring-0 resize-none bg-transparent"
+            />
           </div>
 
-          <div className="text-xs text-gray-500">
-            Press Enter to save
+          {/* Metadata Section */}
+          <div className="pt-3 border-t border-gray-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Priority */}
+              <div className="flex items-center space-x-2 min-w-0">
+                <Flag className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <label className="block text-xs text-gray-500 mb-1">Priority</label>
+                  <Select
+                    value={formData.priority}
+                    onChange={(e) => handleChange('priority', e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded-md py-1 px-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {priorityOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              {/* Due Date */}
+              <div className="flex items-center space-x-2 min-w-0">
+                <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <label className="block text-xs text-gray-500 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) => handleChange('dueDate', e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded-md py-1 px-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                  />
+                </div>
+              </div>
+
+              {/* Assignee */}
+              <div className="flex items-center space-x-2 min-w-0 sm:col-span-2 lg:col-span-1">
+                <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <label className="block text-xs text-gray-500 mb-1">Assignee</label>
+                  <Select
+                    value={formData.assignedTo}
+                    onChange={(e) => handleChange('assignedTo', e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded-md py-1 px-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Unassigned</option>
+                    {users.map(user => (
+                      <option key={user._id} value={user._id}>
+                        {user.name || user.email}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div className="flex items-center space-x-2">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!formData.title.trim() || loading}
+                className="px-4 py-2 text-sm font-medium"
+              >
+                {loading ? 'Creating...' : 'Add Task'}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onCancel}
+                className="px-4 py-2 text-sm font-medium"
+              >
+                Cancel
+              </Button>
+            </div>
+
+            <div className="text-xs text-gray-500 hidden sm:block">
+              Press Enter to save
+            </div>
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

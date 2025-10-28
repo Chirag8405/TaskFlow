@@ -12,10 +12,12 @@ import {
 } from 'lucide-react';
 import { Avatar } from '../common';
 import TaskEditModal from '../common/TaskEditModal';
+import ConfirmDialog from '../common/ConfirmDialog';
 
 const TaskCard = ({ task, onUpdate, onDelete, isDragging }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const menuRef = useRef(null);
 
   // Close menu when clicking outside
@@ -48,12 +50,20 @@ const TaskCard = ({ task, onUpdate, onDelete, isDragging }) => {
     }
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date, taskStatus) => {
     if (!date) return null;
     const taskDate = new Date(date);
     const today = new Date();
     const diffTime = taskDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Don't show overdue messages for completed tasks
+    if (taskStatus === 'completed') {
+      return { 
+        text: `Completed ${taskDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, 
+        color: 'text-green-600' 
+      };
+    }
 
     if (diffDays < 0) {
       return { text: `${Math.abs(diffDays)}d overdue`, color: 'text-red-600' };
@@ -71,7 +81,7 @@ const TaskCard = ({ task, onUpdate, onDelete, isDragging }) => {
     }
   };
 
-  const dueDateInfo = formatDate(task.dueDate);
+  const dueDateInfo = formatDate(task.dueDate, task.status);
 
   const handleEdit = () => {
     setShowEditModal(true);
@@ -79,10 +89,17 @@ const TaskCard = ({ task, onUpdate, onDelete, isDragging }) => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      onDelete(task._id);
-    }
+    setShowConfirmDialog(true);
     setShowMenu(false);
+  };
+
+  const confirmDelete = () => {
+    onDelete(task._id);
+    setShowConfirmDialog(false);
+  };
+
+  const cancelDelete = () => {
+    setShowConfirmDialog(false);
   };
 
   const handleSaveEdit = async (updatedData) => {
@@ -171,58 +188,66 @@ const TaskCard = ({ task, onUpdate, onDelete, isDragging }) => {
       )}
 
       {/* Metadata */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {/* Priority */}
-          {task.priority && (
-            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${getPriorityColor(task.priority)}`}>
-              <Flag className="h-3 w-3 mr-1" />
-              {task.priority}
-            </span>
-          )}
+      <div className="space-y-2">
+        {/* Priority and Due Date Row */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center space-x-2 flex-wrap">
+            {/* Priority */}
+            {task.priority && (
+              <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${getPriorityColor(task.priority)}`}>
+                <Flag className="h-3 w-3 mr-1" />
+                {task.priority}
+              </span>
+            )}
 
-          {/* Due Date */}
-          {dueDateInfo && (
-            <span className={`inline-flex items-center text-xs ${dueDateInfo.color}`}>
-              <Clock className="h-3 w-3 mr-1" />
-              {dueDateInfo.text}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {/* Comments Count */}
-          {task.commentsCount > 0 && (
-            <span className="inline-flex items-center text-xs text-gray-500">
-              <MessageSquare className="h-3 w-3 mr-1" />
-              {task.commentsCount}
-            </span>
-          )}
-
-          {/* Attachments Count */}
-          {task.attachmentsCount > 0 && (
-            <span className="inline-flex items-center text-xs text-gray-500">
-              <Paperclip className="h-3 w-3 mr-1" />
-              {task.attachmentsCount}
-            </span>
-          )}
+            {/* Due Date */}
+            {dueDateInfo && (
+              <span className={`inline-flex items-center text-xs ${dueDateInfo.color} whitespace-nowrap`}>
+                <Clock className="h-3 w-3 mr-1" />
+                {dueDateInfo.text}
+              </span>
+            )}
+          </div>
 
           {/* Assignee Avatar */}
-          {task.assignedTo && (
-            <Avatar 
-              user={task.assignedTo} 
-              size="xs" 
-              showOnlineStatus={false}
-            />
-          )}
-          {!task.assignedTo && task.assignee && (
-            <Avatar 
-              user={task.assignee} 
-              size="xs" 
-              showOnlineStatus={false}
-            />
-          )}
+          <div className="flex-shrink-0">
+            {task.assignedTo && (
+              <Avatar 
+                user={task.assignedTo} 
+                size="xs" 
+                showOnlineStatus={false}
+              />
+            )}
+            {!task.assignedTo && task.assignee && (
+              <Avatar 
+                user={task.assignee} 
+                size="xs" 
+                showOnlineStatus={false}
+              />
+            )}
+          </div>
         </div>
+
+        {/* Comments and Attachments Row */}
+        {(task.commentsCount > 0 || task.attachmentsCount > 0) && (
+          <div className="flex items-center space-x-3">
+            {/* Comments Count */}
+            {task.commentsCount > 0 && (
+              <span className="inline-flex items-center text-xs text-gray-500">
+                <MessageSquare className="h-3 w-3 mr-1" />
+                {task.commentsCount}
+              </span>
+            )}
+
+            {/* Attachments Count */}
+            {task.attachmentsCount > 0 && (
+              <span className="inline-flex items-center text-xs text-gray-500">
+                <Paperclip className="h-3 w-3 mr-1" />
+                {task.attachmentsCount}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -231,6 +256,17 @@ const TaskCard = ({ task, onUpdate, onDelete, isDragging }) => {
         onClose={() => setShowEditModal(false)}
         task={task}
         onSave={handleSaveEdit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
       />
     </div>
   );
