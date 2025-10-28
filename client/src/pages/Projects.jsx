@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import Layout from '../components/layout/Layout';
 import ProjectModal from '../components/projects/ProjectModal';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
 import {
   Plus,
@@ -30,6 +31,8 @@ const Projects = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -82,18 +85,30 @@ const Projects = () => {
     }
   };
 
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm('Are you sure you want to delete this project?')) {
-      return;
-    }
+  const handleDeleteProject = (projectId) => {
+    const project = projects.find(p => p._id === projectId);
+    setProjectToDelete(project);
+    setShowConfirmDialog(true);
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
 
     try {
-      await projectService.deleteProject(projectId);
-      setProjects(prev => prev.filter(p => p._id !== projectId));
+      await projectService.deleteProject(projectToDelete._id);
+      setProjects(prev => prev.filter(p => p._id !== projectToDelete._id));
       toast.success('Project deleted successfully');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete project');
+    } finally {
+      setShowConfirmDialog(false);
+      setProjectToDelete(null);
     }
+  };
+
+  const cancelDeleteProject = () => {
+    setShowConfirmDialog(false);
+    setProjectToDelete(null);
   };
 
   const filterProjects = () => {
@@ -458,6 +473,17 @@ const Projects = () => {
         onClose={() => setShowProjectModal(false)}
         project={selectedProject}
         onSave={handleSaveProject}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={cancelDeleteProject}
+        onConfirm={confirmDeleteProject}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${projectToDelete?.name}"? This action cannot be undone and will delete all associated tasks.`}
+        confirmText="Delete"
+        type="danger"
       />
     </Layout>
   );

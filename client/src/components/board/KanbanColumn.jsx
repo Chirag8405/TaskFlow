@@ -99,7 +99,7 @@ const KanbanColumn = ({
           >
             {/* Create Task Form */}
             {showCreateForm && (
-              <div className="mb-4">
+              <div className="mb-4 animate-in slide-in-from-top duration-200">
                 <TaskCreateForm
                   onSubmit={handleCreateTask}
                   onCancel={() => setShowCreateForm(false)}
