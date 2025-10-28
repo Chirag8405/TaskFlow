@@ -5,6 +5,8 @@ import { projectService } from '../services/projectService';
 import Layout from '../components/layout/Layout';
 import { LoadingSpinner, Button, Select, Input } from '../components/common';
 import TaskModal from '../components/tasks/TaskModal';
+import ConfirmDialog from '../components/common/ConfirmDialog';
+import { useToast } from '../hooks/useToast';
 import {
   Plus,
   Search,
@@ -33,7 +35,10 @@ const Tasks = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const menuRef = useRef(null);
+  const { toast } = useToast();
 
   // Set search query from URL parameter
   useEffect(() => {
@@ -46,6 +51,8 @@ const Tasks = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+
 
   useEffect(() => {
     filterTasks();
@@ -79,7 +86,8 @@ const Tasks = () => {
       setProjects(projectsResponse.data.projects || []);
       setTasks(recentTasksResponse.data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to load tasks';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -114,19 +122,32 @@ const Tasks = () => {
     setFilteredTasks(filtered);
   };
 
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) {
-      return;
-    }
+  const handleDeleteTask = (taskId) => {
+    const task = tasks.find(t => t._id === taskId);
+    setTaskToDelete(task);
+    setShowConfirmDialog(true);
+    setOpenMenuId(null);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return;
 
     try {
-      await taskService.deleteTask(taskId);
-      setTasks(tasks.filter(task => task._id !== taskId));
-      setOpenMenuId(null);
+      await taskService.deleteTask(taskToDelete._id);
+      setTasks(tasks.filter(task => task._id !== taskToDelete._id));
+      toast.success(`"${taskToDelete.title}" deleted successfully`);
     } catch (error) {
-      console.error('Error deleting task:', error);
-      alert('Failed to delete task. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to delete task';
+      toast.error(errorMessage);
+    } finally {
+      setShowConfirmDialog(false);
+      setTaskToDelete(null);
     }
+  };
+
+  const cancelDeleteTask = () => {
+    setShowConfirmDialog(false);
+    setTaskToDelete(null);
   };
 
   const handleEditTask = (taskId) => {
@@ -155,8 +176,7 @@ const Tasks = () => {
       setShowTaskModal(false);
       fetchData(); // Refresh to get updated task with populated fields
     } catch (error) {
-      console.error('Error saving task:', error);
-      throw error;
+      throw error; // Let TaskModal handle the error display
     }
   };
 
@@ -457,52 +477,23 @@ const Tasks = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="relative inline-block" ref={openMenuId === task._id ? menuRef : null}>
+                          <div className="flex gap-2 justify-end">
                             <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(openMenuId === task._id ? null : task._id);
-                              }}
-                              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-                              id={`menu-button-${task._id}`}
+                              onClick={() => handleEditTask(task._id)}
+                              className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-colors"
+                              title="Edit task"
                             >
-                              <MoreVertical className="h-4 w-4" />
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
                             </button>
-                            
-                            {openMenuId === task._id && (() => {
-                              const button = document.getElementById(`menu-button-${task._id}`);
-                              const rect = button?.getBoundingClientRect();
-                              return (
-                                <div 
-                                  className="fixed w-32 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-[9999]"
-                                  style={{
-                                    top: rect ? `${rect.top - 80}px` : '0px',
-                                    left: rect ? `${rect.left - 100}px` : '0px',
-                                  }}
-                                >
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditTask(task._id);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                  >
-                                    <Edit className="h-3 w-3 mr-2" />
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteTask(task._id);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                  >
-                                    <Trash2 className="h-3 w-3 mr-2" />
-                                    Delete
-                                  </button>
-                                </div>
-                              );
-                            })()}
+                            <button 
+                              onClick={() => handleDeleteTask(task._id)}
+                              className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-colors"
+                              title="Delete task"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -515,52 +506,32 @@ const Tasks = () => {
               <div className="md:hidden divide-y divide-gray-200">
                 {filteredTasks.map((task) => (
                   <div key={task._id} className="p-4 hover:bg-gray-50">
-                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center flex-1 min-w-0">
                         {getStatusIcon(task.status)}
                         <h3 className="ml-2 text-sm font-medium text-gray-900 truncate">
                           {task.title}
                         </h3>
                       </div>
-                      <div className="relative ml-2 flex-shrink-0" ref={openMenuId === task._id ? menuRef : null}>
+                      <div className="flex gap-1 ml-2 flex-shrink-0">
                         <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(openMenuId === task._id ? null : task._id);
-                          }}
-                          className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                          onClick={() => handleEditTask(task._id)}
+                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors"
+                          title="Edit task"
                         >
-                          <MoreVertical className="h-4 w-4" />
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
                         </button>
-                        
-                        {openMenuId === task._id && (
-                          <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditTask(task._id);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            >
-                              <Edit className="h-3 w-3 mr-2" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteTask(task._id);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                            >
-                              <Trash2 className="h-3 w-3 mr-2" />
-                              Delete
-                            </button>
-                          </div>
-                        )}
+                        <button 
+                          onClick={() => handleDeleteTask(task._id)}
+                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors"
+                          title="Delete task"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </button>
                       </div>
-                    </div>
-                    
-                    {task.description && (
+                    </div>                    {task.description && (
                       <p className="text-sm text-gray-500 mb-3 line-clamp-2">
                         {task.description}
                       </p>
@@ -632,6 +603,17 @@ const Tasks = () => {
         task={selectedTask}
         projectId={projectFilter !== 'all' ? projectFilter : null}
         onSave={handleSaveTask}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={cancelDeleteTask}
+        onConfirm={confirmDeleteTask}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${taskToDelete?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
       />
     </Layout>
   );
