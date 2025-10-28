@@ -247,11 +247,9 @@ const KanbanBoard = ({ projectId, onTaskCreate, onTaskUpdate }) => {
       const response = await taskService.createTask(newTask);
       const createdTask = response.data?.task || response.data;
 
-      // Update local state
-      const newColumns = { ...columns };
-      newColumns[columnId].tasks.push(createdTask);
-      setColumns(newColumns);
-
+      // Don't update local state here - let socket event handle it to avoid duplicates
+      // The handleTaskCreated socket event will add the task to the UI
+      
       // Emit real-time event
       emitTaskCreated(projectId, createdTask);
 

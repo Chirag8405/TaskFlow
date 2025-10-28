@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Textarea, Select } from '../common';
 import { useToast } from '../../hooks/useToast';
+import { userService } from '../../services/userService';
 import { Calendar, Flag, User } from 'lucide-react';
 
 const TaskCreateForm = ({ onSubmit, onCancel }) => {
@@ -9,10 +10,26 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
     description: '',
     priority: 'medium',
     dueDate: '',
-    assignee: ''
+    assignedTo: ''
   });
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await userService.getUsers();
+      const usersData = response.data?.users || response.users || response.data || [];
+      setUsers(Array.isArray(usersData) ? usersData : []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUsers([]);
+    }
+  };
 
   const priorityOptions = [
     { value: 'low', label: 'Low Priority', color: 'text-green-600' },
@@ -34,7 +51,7 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
         title: formData.title.trim(),
         description: formData.description.trim(),
         dueDate: formData.dueDate || null,
-        assignee: formData.assignee || null
+        assignedTo: formData.assignedTo || null
       };
 
       await onSubmit(taskData);
@@ -46,7 +63,7 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
         description: '',
         priority: 'medium',
         dueDate: '',
-        assignee: ''
+        assignedTo: ''
       });
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to create task';
@@ -112,6 +129,23 @@ const TaskCreateForm = ({ onSubmit, onCancel }) => {
               onChange={(e) => handleChange('dueDate', e.target.value)}
               className="border-0 shadow-none p-0 text-xs focus:ring-0 text-gray-600"
             />
+          </div>
+
+          {/* Assignee */}
+          <div className="flex items-center space-x-2">
+            <User className="h-4 w-4 text-gray-400" />
+            <Select
+              value={formData.assignedTo}
+              onChange={(e) => handleChange('assignedTo', e.target.value)}
+              className="border-0 shadow-none p-0 text-xs focus:ring-0"
+            >
+              <option value="">Unassigned</option>
+              {users.map(user => (
+                <option key={user._id} value={user._id}>
+                  {user.name || user.email}
+                </option>
+              ))}
+            </Select>
           </div>
         </div>
 
